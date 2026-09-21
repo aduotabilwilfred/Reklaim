@@ -1,0 +1,6 @@
+@Reklaim.api_HostAddress = http://localhost:5141
+
+GET {{Reklaim.api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
