@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/Reklaim.Api/">
+    <Project Path="Reklaim.Api/Reklaim.api.csproj" />
+  </Folder>
+</Solution>

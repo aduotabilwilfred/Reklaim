@@ -1,7 +1,7 @@
 # Campus Lost & Found — Project Breakdown
 
 **Platform:** Web Application
-**Stack:** ASP.NET Core (MVC/Blazor) + ASP.NET Core Web API + SQL Server/PostgreSQL (EF Core) + Azure Blob Storage / AWS S3
+**Stack:** ASP.NET Core (MVC/Blazor) + ASP.NET Core Web API + PostgreSQL (EF Core) + Local disk storage for MVP (cloud storage optional later)
 
 ---
 
@@ -67,7 +67,7 @@
 | LocationFound | string | |
 | Category | enum/string | Electronics, Keys, Documents, etc. |
 | PostType | enum | Lost or Found |
-| ImageUrl | string | Points to cloud storage object |
+| ImageUrl | string | File path/URL from `IFileStorageService` (local disk for MVP) |
 | DatePosted | DateTime | |
 | Status | enum | Active, Claimed, Resolved |
 | UserId | FK → User.Id | Poster of the item |
@@ -102,11 +102,35 @@
    - Build claim workflow: submit `ClaimRequest` (with proof description) → notify finder → finder approves/denies → on approval, reveal phone numbers to both parties.
    - Enforce rate limit: max 3 open/pending claims per user at a time.
 6. **Polish & Deploy**
-   - Status management (Active/Claimed/Resolved), notifications, deployment to Azure/AWS.
+   - Status management (Active/Claimed/Resolved), notifications.
+   - Deployment to a free-tier host (decided later — see Section 7).
 
 ---
 
-## 5. Open Questions to Resolve Before Building
+## 6. Team & Role Assignments
+
+Roster from the semester project proposal, mapped to the phases and stack already settled on in this document (PostgreSQL, phone-only reveal, free MVP tools — not the SQL Server/JWT/smart-matching/geolocation variants mentioned in the original proposal).
+
+| Name | Role | Maps to (this plan) |
+|---|---|---|
+| Wilfred Adu Otabil | Project Manager | Owns timeline across all phases (Section 4) |
+| Kwakye Ishmael Affum | Backend Lead | Phase 1 (Foundation) — API structure, business logic |
+| Ablorh-Adjei Caleb | Backend Developer | Phase 1 — EF Core models (`User`, `ItemPost`, `ClaimRequest`), PostgreSQL integration |
+| Shadrack Dorkenoo | Frontend Lead | Phase 3 (The Hub) — overall UI/UX for the feed |
+| Joel Adom Yaw Opoku | Frontend Developer | Phase 3 — Blazor/MVC components for Lost/Found streams |
+| Samuel Kofi Ntem Amankwah | Frontend Developer | Phase 3 — search & filter UI (keyword, category, date, location) |
+| Emmanuel Jerry Kuake | Database Admin | Phase 1 — PostgreSQL schema design & migrations |
+| Kennedy Sarfo | Security & Auth | Phase 2 (Authentication) — university email sign-in; also owns the phone-number reveal + rate-limiting logic in Phase 5 |
+| Melchizedek Sensemore.D.A | DevOps/Deployment | Local Postgres/dev environment now; free-tier hosting setup when the team is ready (Section 5) |
+| Prince Boateng | QA Lead | Test strategy across all phases, esp. the claim/reveal-contact flow |
+| Prosper Sokari | QA Tester | Unit & end-to-end tests, esp. rate-limiting (max 3 open claims) and image upload |
+| Peter Paul Didemudo | Documentation | Keeps this breakdown and API docs up to date as the build progresses |
+
+**Note:** the original proposal's smart-matching, geolocation, and full JWT-based auth are not part of this MVP scope. If the team wants to revisit those later, they'd slot in as post-MVP phases without disrupting the current plan.
+
+---
+
+## 7. Open Questions to Resolve Before Building
 
 - Hosting preference (deferred): Azure or AWS — for app hosting and image storage. See note below on why this can wait and what it does affect.
 
