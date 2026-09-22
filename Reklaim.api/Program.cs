@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Reklaim.api.Data;
 using Reklaim.api.Models;
+using Reklaim.api.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +41,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddControllers();
 
+// Register the file storage service (swap this for AzureBlobStorageService later)
+builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -47,6 +51,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// Serve uploaded images from wwwroot/uploads as static files
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
