@@ -1,15 +1,16 @@
 namespace Reklaim.api.Data;
 
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Reklaim.api.Models;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    public DbSet<User> Users { get; set; } = null!;
     public DbSet<ItemPost> Posts { get; set; } = null!;
     public DbSet<ClaimRequest> Claims { get; set; } = null!;
 
@@ -37,10 +38,5 @@ public class AppDbContext : DbContext
             .WithOne(c => c.Post)
             .HasForeignKey(c => c.PostId)
             .OnDelete(DeleteBehavior.Cascade);
-            
-        // Make email unique constraint
-        modelBuilder.Entity<User>()
-            .HasIndex(u => u.StudentEmail)
-            .IsUnique();
     }
 }
