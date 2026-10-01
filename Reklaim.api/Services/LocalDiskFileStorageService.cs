@@ -2,8 +2,10 @@ namespace Reklaim.api.Services;
 
 public class LocalDiskFileStorageService : IFileStorageService
 {
-    private readonly IWebHostEnvironment _env;
     private readonly string _uploadsFolder;
+
+    internal static string GetUploadsFolder(IWebHostEnvironment env) =>
+        Path.Combine(env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot"), "uploads");
 
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -13,8 +15,7 @@ public class LocalDiskFileStorageService : IFileStorageService
 
     public LocalDiskFileStorageService(IWebHostEnvironment env)
     {
-        _env = env;
-        _uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads");
+        _uploadsFolder = GetUploadsFolder(env);
         Directory.CreateDirectory(_uploadsFolder);
     }
 
@@ -48,9 +49,16 @@ public class LocalDiskFileStorageService : IFileStorageService
         if (string.IsNullOrWhiteSpace(fileUrl))
             return Task.CompletedTask;
 
-        // Strip the leading slash and build the full OS path
-        var relativePath = fileUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot", relativePath);
+        const string prefix = "/uploads/";
+        if (!fileUrl.StartsWith(prefix, StringComparison.Ordinal))
+            throw new ArgumentException("Only local upload URLs can be deleted.", nameof(fileUrl));
+
+        var fileName = fileUrl[prefix.Length..];
+        if (string.IsNullOrWhiteSpace(fileName) || fileName.Contains('/') || fileName.Contains('\\')
+            || fileName is "." or "..")
+            throw new ArgumentException("Invalid upload filename.", nameof(fileUrl));
+
+        var fullPath = Path.Combine(_uploadsFolder, fileName);
 
         if (File.Exists(fullPath))
             File.Delete(fullPath);

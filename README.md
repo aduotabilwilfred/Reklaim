@@ -180,6 +180,12 @@ Filters can be combined, for example:
 
 With the API running against a local disposable database, run `python3 tests/hub_api_smoke.py` to check combined filters, UTC date bounds, invalid inputs, and status updates. The script creates a unique test account and removes its posts afterward; the test account remains in the local database. Override `REKLAIM_API_URL` if using a different local port.
 
+### Image delivery
+
+The API creates its local `wwwroot/uploads` directory at startup and serves uploaded images at `/uploads/<filename>`. The frontend can prepend the API origin to the `imageUrl` returned by the item endpoint. Image URLs are public, like the Hub feed. JPG, JPEG, and PNG extensions are accepted, up to 5 MB; extension validation does not verify the image contents. Deleting a post removes its local image. Runtime uploads are ignored by Git.
+
+Run `python3 tests/upload_api_smoke.py` against a local disposable database to check upload, anonymous image retrieval, invalid uploads, and deletion. It leaves a unique test account but removes its post and image. Set `REKLAIM_API_URL` for a different port. To verify first-start behavior, launch a separate API instance with a temporary content root containing the development configuration but no `wwwroot`, using `dotnet run --no-build --launch-profile http -- --urls http://localhost:5142 --contentRoot <temporary-directory>`, then run the test against port 5142. Do not copy local secrets into version control.
+
 ---
 
 ## Git Workflow

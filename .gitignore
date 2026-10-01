@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local runtime uploads are not source files.
+Reklaim.api/wwwroot/uploads/
