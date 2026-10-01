@@ -152,7 +152,7 @@ The API will be available at `https://localhost:<port>`. The OpenAPI/Swagger UI 
 ### Item Posts (Hub)
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/api/itemposts` | None | Browse all posts (filter by `type`, `category`, `status`, `search`) |
+| GET | `/api/itemposts` | None | Browse all posts (filter by `type`, `category`, `status`, `search`, `location`, `dateFrom`, `dateTo`) |
 | GET | `/api/itemposts/{id}` | None | Get a single post |
 | POST | `/api/itemposts` | Required | Create a new Lost/Found post (multipart/form-data for image) |
 | PATCH | `/api/itemposts/{id}/status` | Required | Update post status (poster only) |
@@ -166,6 +166,19 @@ The API will be available at `https://localhost:<port>`. The OpenAPI/Swagger UI 
 | GET | `/api/claims/my-claims` | Required | All claims you submitted |
 | GET | `/api/claims/on-my-posts` | Required | All incoming claims on your posts |
 | POST | `/api/claims/{id}/review` | Required | Approve or deny a claim (finder only). Phone numbers revealed on approval. |
+
+### Hub filters and validation
+
+Filters can be combined, for example:
+`GET /api/itemposts?type=Found&location=Balme&dateFrom=2026-09-01&dateTo=2026-09-30`.
+
+- `search` matches part of the title or description; `location` matches part of `LocationFound`. Both ignore case and surrounding whitespace. Category is an exact, case-insensitive match.
+- `dateFrom` and `dateTo` use `YYYY-MM-DD` and include the entire specified UTC days. Either bound can be omitted.
+- Invalid dates, reversed date ranges, and undefined type/status values return HTTP 400. Valid types are `Lost` and `Found`; statuses are `Active`, `Claimed`, and `Resolved` (their defined numeric enum values also work).
+- Results are ordered newest first, with descending ID breaking timestamp ties.
+- Creating a post requires nonblank title, description, location, and category. Text is trimmed before saving. Status updates require a defined status value.
+
+With the API running against a local disposable database, run `python3 tests/hub_api_smoke.py` to check combined filters, UTC date bounds, invalid inputs, and status updates. The script creates a unique test account and removes its posts afterward; the test account remains in the local database. Override `REKLAIM_API_URL` if using a different local port.
 
 ---
 

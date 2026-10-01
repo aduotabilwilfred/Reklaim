@@ -26,28 +26,49 @@ public class ItemPostsController : ControllerBase
     // GET /api/itemposts?type=Lost&category=Electronics&status=Active&search=keys
     [HttpGet]
     [AllowAnonymous] // The Hub feed is publicly viewable
-    public async Task<IActionResult> GetAll(
-        [FromQuery] string? type,
-        [FromQuery] string? category,
-        [FromQuery] string? status,
-        [FromQuery] string? search)
+    public async Task<IActionResult> GetAll([FromQuery] ItemPostQuery request)
     {
-        var query = _db.Posts.Include(p => p.User).AsQueryable();
+        var query = _db.Posts.AsNoTracking().AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(type) && Enum.TryParse<PostType>(type, true, out var postType))
-            query = query.Where(p => p.PostType == postType);
+        if (request.Type.HasValue)
+            query = query.Where(p => p.PostType == request.Type.Value);
 
-        if (!string.IsNullOrWhiteSpace(category))
-            query = query.Where(p => p.Category.ToLower() == category.ToLower());
+        if (!string.IsNullOrWhiteSpace(request.Category))
+        {
+            var category = request.Category.Trim().ToLower();
+            query = query.Where(p => p.Category.ToLower() == category);
+        }
 
-        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PostStatus>(status, true, out var postStatus))
-            query = query.Where(p => p.Status == postStatus);
+        if (request.Status.HasValue)
+            query = query.Where(p => p.Status == request.Status.Value);
 
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim().ToLower();
+            query = query.Where(p => p.Title.ToLower().Contains(search) || p.Description.ToLower().Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Location))
+        {
+            var location = request.Location.Trim().ToLower();
+            query = query.Where(p => p.LocationFound.ToLower().Contains(location));
+        }
+
+        if (request.DateFrom.HasValue)
+        {
+            var from = request.DateFrom.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(p => p.DatePosted >= from);
+        }
+
+        if (request.DateTo.HasValue && request.DateTo.Value != DateOnly.MaxValue)
+        {
+            var until = request.DateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(p => p.DatePosted < until);
+        }
 
         var posts = await query
             .OrderByDescending(p => p.DatePosted)
+            .ThenByDescending(p => p.Id)
             .Select(p => new ItemPostResponse
             {
                 Id = p.Id,
@@ -113,10 +134,10 @@ public class ItemPostsController : ControllerBase
 
         var post = new ItemPost
         {
-            Title = request.Title,
-            Description = request.Description,
-            LocationFound = request.LocationFound,
-            Category = request.Category,
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            LocationFound = request.LocationFound.Trim(),
+            Category = request.Category.Trim(),
             PostType = request.PostType,
             ImageUrl = imageUrl,
             UserId = userId.Value
@@ -138,7 +159,7 @@ public class ItemPostsController : ControllerBase
         if (post == null) return NotFound();
         if (post.UserId != userId) return Forbid(); // Only the poster can update status
 
-        post.Status = request.Status;
+        post.Status = request.Status!.Value;
         await _db.SaveChangesAsync();
 
         return NoContent();
