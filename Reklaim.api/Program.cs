@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Reklaim.api.Data;
 using Reklaim.api.Models;
@@ -52,8 +53,17 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Serve uploaded images from wwwroot/uploads as static files
-app.UseStaticFiles();
+// Register the uploads provider at startup, including on a fresh checkout where
+// wwwroot does not exist yet. Storage and serving must use the same absolute path.
+var uploadsFolder = LocalDiskFileStorageService.GetUploadsFolder(app.Environment);
+Directory.CreateDirectory(uploadsFolder);
+var uploadsProvider = new PhysicalFileProvider(uploadsFolder);
+app.Lifetime.ApplicationStopped.Register(uploadsProvider.Dispose);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = uploadsProvider,
+    RequestPath = "/uploads"
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
