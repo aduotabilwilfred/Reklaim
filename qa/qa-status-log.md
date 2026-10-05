@@ -12,9 +12,7 @@ No opinions. Just dates, asks, and responses.
 
 |------|---------------|-------------|----------|
 
-|      | Status of /api/auth/\* endpoints | Backend team | No answer |
+| 2026-10-05 | Hosted API URL for tomorrow's test session | Shadrack (group chat) | Plan announced, URL not yet provided |
 
-|      | Status of /api/claims/\* endpoints | Backend team | No answer |
-
-|      | Confirmation that Hub endpoints are deployed | Backend team | No answer |
+| 2026-10-06 | Hosted API URL | Shadrack (group chat) | Received; all four test suites PASS on hosted backend |
 
