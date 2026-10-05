@@ -1,0 +1,9 @@
+.git
+.gitignore
+.vs
+**/bin
+**/obj
+tests
+qa
+*.user
+*.suo
