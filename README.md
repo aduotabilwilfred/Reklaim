@@ -13,6 +13,7 @@ A web platform that helps university students recover lost items by connecting *
 - [Getting Started (Backend)](#getting-started-backend)
 - [Environment Variables & Secrets](#environment-variables--secrets)
 - [API Endpoints](#api-endpoints)
+- [Full API Documentation](#full-api-documentation)
 - [Git Workflow](#git-workflow)
 
 ---
@@ -187,6 +188,10 @@ The API creates its local `wwwroot/uploads` directory at startup and serves uplo
 Run `python3 tests/upload_api_smoke.py` against a local disposable database to check upload, anonymous image retrieval, invalid uploads, and deletion. It leaves a unique test account but removes its post and image. Set `REKLAIM_API_URL` for a different port. To verify first-start behavior, launch a separate API instance with a temporary content root containing the development configuration but no `wwwroot`, using `dotnet run --no-build --launch-profile http -- --urls http://localhost:5142 --contentRoot <temporary-directory>`, then run the test against port 5142. Do not copy local secrets into version control.
 
 ---
+
+## Full API Documentation
+
+See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for endpoint details, authentication, request bodies, query parameters, and example responses.
 
 ## Git Workflow
 
