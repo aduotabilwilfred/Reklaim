@@ -38,7 +38,7 @@ Reklaim allows students to:
 | Authentication | ASP.NET Core Identity + JWT Bearer |
 | Database ORM | Entity Framework Core |
 | Database | PostgreSQL (Supabase free tier for MVP) |
-| Image Storage | Local disk (`wwwroot/uploads`) for MVP — swappable via `IFileStorageService` |
+| Image Storage | Cloudinary (cloud persistent storage) / Local fallback (`wwwroot/uploads`) via `IFileStorageService` |
 | Frontend | *(separate repo / folder — handled by the frontend team)* |
 
 ---
