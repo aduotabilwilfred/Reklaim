@@ -53,6 +53,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    service = "reklaim-api"
+}));
+
 // Register the uploads provider at startup, including on a fresh checkout where
 // wwwroot does not exist yet. Storage and serving must use the same absolute path.
 var uploadsFolder = LocalDiskFileStorageService.GetUploadsFolder(app.Environment);
