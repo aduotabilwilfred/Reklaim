@@ -42,8 +42,21 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddControllers();
 
-// Register the file storage service (swap this for AzureBlobStorageService later)
-builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
+// Register the file storage service: use Cloudinary if credentials/URL are configured, otherwise fall back to LocalDiskFileStorageService
+var hasCloudinary = !string.IsNullOrWhiteSpace(builder.Configuration["CLOUDINARY_URL"])
+    || !string.IsNullOrWhiteSpace(builder.Configuration["Cloudinary:Url"])
+    || (!string.IsNullOrWhiteSpace(builder.Configuration["Cloudinary:CloudName"] ?? builder.Configuration["CLOUDINARY_CLOUD_NAME"])
+        && !string.IsNullOrWhiteSpace(builder.Configuration["Cloudinary:ApiKey"] ?? builder.Configuration["CLOUDINARY_API_KEY"])
+        && !string.IsNullOrWhiteSpace(builder.Configuration["Cloudinary:ApiSecret"] ?? builder.Configuration["CLOUDINARY_API_SECRET"]));
+
+if (hasCloudinary)
+{
+    builder.Services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalDiskFileStorageService>();
+}
 
 var app = builder.Build();
 
@@ -59,17 +72,19 @@ app.MapGet("/health", () => Results.Ok(new
     service = "reklaim-api"
 }));
 
-// Register the uploads provider at startup, including on a fresh checkout where
-// wwwroot does not exist yet. Storage and serving must use the same absolute path.
-var uploadsFolder = LocalDiskFileStorageService.GetUploadsFolder(app.Environment);
-Directory.CreateDirectory(uploadsFolder);
-var uploadsProvider = new PhysicalFileProvider(uploadsFolder);
-app.Lifetime.ApplicationStopped.Register(uploadsProvider.Dispose);
-app.UseStaticFiles(new StaticFileOptions
+// If local disk storage is used, configure static file serving for /uploads
+if (!hasCloudinary)
 {
-    FileProvider = uploadsProvider,
-    RequestPath = "/uploads"
-});
+    var uploadsFolder = LocalDiskFileStorageService.GetUploadsFolder(app.Environment);
+    Directory.CreateDirectory(uploadsFolder);
+    var uploadsProvider = new PhysicalFileProvider(uploadsFolder);
+    app.Lifetime.ApplicationStopped.Register(uploadsProvider.Dispose);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = uploadsProvider,
+        RequestPath = "/uploads"
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
